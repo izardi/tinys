@@ -22,15 +22,23 @@ public:
     template <typename T>
     Value(const T& val) { *this = val; }
 
-    template <typename T>
-    Value& operator = (T& val) {
-        if (typeid(val) == typeid(bool)) 
-            m_value = (val ? "true" : "false");
-        else if (typeid(val) == typeid(int) ||
-            typeid(val) == typeid(double))
-            m_value = to_string(val);
-        else if (typeid(val) == typeid(string))
-            m_value = val;
+    Value& operator = (bool val) {
+        m_value = val ? "true" : "false";
+        return *this;
+    }
+
+    Value& operator = (int val) {
+        m_value = std::to_string(val);
+        return *this;
+    }
+
+    Value& operator = (double val) {
+        m_value = std::to_string(val);
+        return *this;
+    }
+
+    Value& operator = (const string& val) {
+        m_value = val;
         return *this;
     }
 
