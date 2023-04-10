@@ -8,6 +8,10 @@
 #include <cstring>
 using namespace std;
 
+
+#define MAXLOGLINESIZE 4096
+#define MAXTIMESTRSIZE 32
+
 namespace tinys {
 namespace utility {
     
@@ -52,12 +56,52 @@ public:
 
         time_t ticks = time(NULL);      
         struct tm* ltm = localtime(&ticks);
-        char timestamp[32];
+
+        char timestamp[MAXTIMESTRSIZE];
         bzero(&timestamp, sizeof(timestamp));
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", ltm);
 
+        const char *fmt = "%s %s %s:%d ";
+        char linebuf[MAXLOGLINESIZE];
 
+        int len = snprintf(linebuf, MAXLOGLINESIZE, fmt, timestamp, s_level[l], file, line);
+        linebuf[len] = '\0';
+        
+        m_logos << linebuf;
+        m_loglen += len;
 
+        va_list args;
+        va_start(args, format);
+        len = vsnprintf(linebuf, sizeof(linebuf), format, args);
+        va_end(args);
+        linebuf[len] = '\0';
+
+        m_logos << linebuf;
+        m_loglen += len;
+        
+        m_logos << "\n";
+        m_logos.flush();
+        
+        if (m_logmax > 0 && m_loglen >= m_logmax) {
+            rotate();
+        }
+
+    }
+
+    void rotate() {
+        close();
+        time_t ticks = time(NULL);
+        struct tm* ltm = localtime(&ticks);
+        
+        char timestamp[MAXTIMESTRSIZE];
+        bzero(timestamp, sizeof(timestamp));
+        strftime(timestamp, sizeof(timestamp), ".%Y-%m-%d_%H-%M-%S", ltm);
+        string newname = m_logfilename + timestamp;
+        if (rename(m_logfilename.c_str(), newname.c_str()) != 0) {
+            perror("rename");
+            exit(1);
+        }
+        open(m_logfilename);
     }
     
     void level(int level) {
@@ -77,8 +121,9 @@ private:
 
     string m_logfilename;
     ofstream m_logos;
-    int m_loglen;
+    unsigned long long m_loglen;
     int m_level;
+    unsigned long long m_logmax;
 };
 
 Logger* Logger::m_instance = nullptr;
