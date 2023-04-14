@@ -12,9 +12,7 @@ using namespace std;
 #define MAXLOGLINESIZE 4096
 #define MAXTIMESTRSIZE 32
 
-namespace tinys {
 namespace utility {
-    
     
 #define debug(format, ...) \
     Logger::instance()->log(Logger::DEUBG, __FILE__, __LINE__, format, ##__VA_ARGS__)
@@ -128,7 +126,6 @@ private:
 
 Logger* Logger::m_instance = nullptr;
 
-}
 }
 
 #endif
